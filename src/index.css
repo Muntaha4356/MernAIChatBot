@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+
+
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark * ) );
+
+/* 
+  @custom-variant dark (&:where(.dark, .dark *));
+is telling Tailwind (or UnoCSS) that you want to create 
+a new variant called dark, which will only apply styles 
+when the .dark class is on the <html> or <body> (or their descendants).
+*/
+
+*{
+  font-family: "Outfit", sans-serif;
+}
+
+@theme{
+  --color-primary: #E6CCFF
+}
+
+
+::-webkit-scrollbar{
+  display: none;
+}
+
+.reset-tw :not(pre):not(code){
+  all:revert;
+}
+/* Select the <div> that is the 2nd child from the end of its parent. */
+
+.loader div:nth-child(2){
+  animation-delay: 0.2s;
+}
+.loader div:nth-child(2){
+  animation-delay: 0.4s;
+}
+
