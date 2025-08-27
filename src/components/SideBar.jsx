@@ -2,9 +2,36 @@ import React, { useState } from 'react'
 import { useAppContext } from '../context/Context'
 import { assets } from '../assets/assets';
 import moment from 'moment'
+import toast from 'react-hot-toast';
 const SideBar = ({isMenuOpened, setIsMenuOpened}) => {
-  const {chats, setSelectedChat, theme, setTheme, user, navigate  } = useAppContext();
+  const {chats, token, setSelectedChat, theme, setTheme, user, navigate, createNewChat, axios, setChat, fetchChat, setToken  } = useAppContext();
   const [search, setSearch]= useState("")
+
+  const logout = () => {
+    localStorage.removeItem('token')
+    setToken(null)
+    toast.success("Logged out successfully")
+  }
+
+  const deleteChat = async (e, chatId) =>{
+    try {
+      e.stopPropagation() //both the bin and the parent container have onClick. while we click... first bin OnClick in triggered then parent onClick so in order to stop it we need to use stopPropagation
+      const confirm = window.confirm('Are you sure you want to delete this chat? ')
+      if(!confirm) return 
+      const {data} = await axios.post('/api/chat/delete', {chatId}, {
+        headers: { Authorization: token}
+      })
+      if(data.success){
+        setChat(prev => prev.filter(chat => chat._id !== chatId))
+        await fetchChat();
+        toast.success(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+
+
   return (
     
     <div className={`flex flex-col h-screen min-w-72 p-5 dark:bg-gradient-to-b 
@@ -16,7 +43,7 @@ const SideBar = ({isMenuOpened, setIsMenuOpened}) => {
       className='w-full max-w-48' />
 
       {/* New Chat Comment */}
-      <button className='flex justify-center items-center w-full py-2 mt-10
+      <button onClick={createNewChat} className='flex justify-center items-center w-full py-2 mt-10
       text-white bg-gradient-to-r from-[#A456F7] to-[#3D81F6] text-sm rounded-md
       cursor-pointer'>
         <span className='mr-2 text-xl'>+</span> New Chat
@@ -43,7 +70,9 @@ const SideBar = ({isMenuOpened, setIsMenuOpened}) => {
               : chat.name.toLowerCase().includes(search.toLowerCase())
           )
           .map((chat) => (
-            <div onClick={()=>{navigate('/');setSelectedChat(chat); setIsMenuOpened(false)}}
+            <div onClick={()=>{navigate('/');
+              setSelectedChat(chat); 
+              setIsMenuOpened(false)}}
               key={chat._id}
               className='p-2 px-4 dark-bg-[#57317C]/10 border
                 border-gray-300 dark:border-[#80609F]/15 rounded-md cursor-pointer 
@@ -60,8 +89,19 @@ const SideBar = ({isMenuOpened, setIsMenuOpened}) => {
                 </p>
               </div>
               <img src={assets.bin_icon} className='hidden group-hover:block
-              w-4 cursor-pointer not-dark:invert'/>
+              w-4 cursor-pointer not-dark:invert'
+              onClick={e=> toast.promise(deleteChat(e, chat._id), {
+                loading: 'deleting...'
+              })}/>
             </div>
+            // toast.promise(
+          //   someAsyncFunction(),
+          //   {
+          //     loading: 'Deleting...',
+          //     success: 'Deleted successfully!',
+          //     error: 'Failed to delete',
+          //   }
+          // ) toast.promise is just for the sake of ui/ux, simply writing delet chat gonna work fine too 
           ))}
 
       </div>
@@ -107,7 +147,7 @@ const SideBar = ({isMenuOpened, setIsMenuOpened}) => {
             {user ? user.name : 'Login Your Account'}
             
           </p>
-          {user && <img src={assets.logout_icon} className='h-5 cursor-pointer hidden not-dark:invert group-hover:block'/> }
+          {user && <img onClick={logout} src={assets.logout_icon} className='h-5 cursor-pointer hidden not-dark:invert group-hover:block'/> }
       </div>
 
       <img onClick={()=>setIsMenuOpened(false)} src={assets.close_icon} className='absolute top-3 right-3 w-5 h-5 cursor-pointer 
